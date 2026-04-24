@@ -1,0 +1,29 @@
+[project]
+name = "clutter-base"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Jon Macey", email = "jmacey@bournemouth.ac.uk" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "pymongo>=4.5",
+    "podman>=5.6,<6",
+    "PySide6>=6.6",
+]
+
+[project.scripts]
+clutter-base = "clutter_base:main"
+add_mesh = "clutter_base.cli.add_mesh:main"
+add_folder = "clutter_base.cli.add_folder:main"
+clutter-admin = "clutter_base.cli.clutter_admin:main"
+
+[build-system]
+requires = ["uv_build>=0.9.0,<0.10.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]

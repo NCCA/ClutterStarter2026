@@ -1,0 +1,19 @@
+[project]
+name = "clutterbase2026"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.uv.workspace]
+members = [
+    "clutter_base",
+]
+
+
+[project.scripts]
+clutter-base = "clutter_base:main"
+add_mesh = "clutter_base.cli.add_mesh:main"
+add_folder = "clutter_base.cli.add_folder:main"
+clutter-admin = "clutter_base.cli.clutter_admin:main"

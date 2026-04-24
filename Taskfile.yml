@@ -1,0 +1,87 @@
+version: "3"
+dotenv: [".env"]
+tasks:
+  up:
+    cmds:
+      - podman-compose up -d
+
+  down:
+    cmds:
+      - podman-compose down
+
+  rebuild:
+    cmds:
+      - podman-compose down -v
+      - podman-compose up -d
+
+  logs:
+    cmds:
+      - podman-compose logs -f
+
+  shell:
+    cmds:
+      - podman exec -it {{.CONTAINER_NAME}} bash
+
+  mongo-shell:
+    desc: Open mongosh connected as root
+    cmds:
+      - podman exec -it {{.CONTAINER_NAME}} mongosh -u {{.MONGO_INITDB_ROOT_USERNAME}} -p {{.MONGO_INITDB_ROOT_PASSWORD}} --authenticationDatabase admin
+
+  create-app-admin:
+    desc: "Bootstrap an App Admin user (idempotent).  Override with: task create-app-admin APP_ADMIN_USER=x APP_ADMIN_PASS=y"
+    vars:
+      APP_ADMIN_USER: '{{.APP_ADMIN_USER | default "admin"}}'
+      APP_ADMIN_PASS: '{{.APP_ADMIN_PASS | default "admin"}}'
+    cmds:
+      - |
+        podman exec -i {{.CONTAINER_NAME}} mongosh -u {{.MONGO_INITDB_ROOT_USERNAME}} -p {{.MONGO_INITDB_ROOT_PASSWORD}} --authenticationDatabase admin --eval "
+          db = db.getSiblingDB('clutter_base');
+
+          const existing = db.getUsers({usersInfo: 1}).users.map(u => u.user);
+          if (existing.includes('{{.APP_ADMIN_USER}}')) {
+            print('App Admin user {{.APP_ADMIN_USER}} already exists — skipping.');
+          } else {
+            db.createUser({
+              user: '{{.APP_ADMIN_USER}}',
+              pwd: '{{.APP_ADMIN_PASS}}',
+              roles: [{ role: 'dbOwner', db: 'clutter_base' }]
+            });
+
+            db.users.insertOne({
+              username: '{{.APP_ADMIN_USER}}',
+              role: 'dbOwner'
+            });
+
+            print('App Admin user {{.APP_ADMIN_USER}} created successfully.');
+          }
+        "
+
+  build-all:
+    desc: Full db build
+    cmds:
+      - podman-compose down -v # remove volume if it exists
+      - podman pull docker.io/mongo
+      - podman-compose up --build -d
+      - sleep 5
+      #- task: create-roles
+      - task: create-app-admin
+      - task: mongo-shell
+
+  add-mesh:
+    desc: Add a sample mesh (requires --username and --password via CLI_ARGS)
+    cmds:
+      - |
+        uv run add_mesh -u jmacey -p changeme -m "ExportedMeshes/BookBlue_1/BookBlue_1.obj" -t obj -n "book blue" \
+        -d "a book from the pixar kitchen set" -T "ExportedMeshes/BookBlue_1/BookBlue_1Top.png" \
+        -s "ExportedMeshes/BookBlue_1/BookBlue_1Side.png" -f "ExportedMeshes/BookBlue_1/BookBlue_1Front.png" \
+        -i "ExportedMeshes/BookBlue_1/BookBlue_1Persp.png"
+
+  # export-archive:
+  #   desc: export to zip
+  #   cmds:
+  #     - podman exec clutter_base mongodump -u root -p rootpass  --authenticationDatabase admin --db clutter_base  --archive --gzip >./backup.gz
+
+  # restore:
+  #   desc: restore from the backup.gz
+  #   cmds:
+  #     - podman exec -i clutter_base mongorestore -u root -p rootpass --authenticationDatabase admin --archive --gzip < backup.gz
