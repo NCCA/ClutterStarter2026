@@ -31,9 +31,7 @@ def install_module(location: str) -> None:
     Returns:
         None
     """
-
     print(f"installing to {location}")
-    Path.mkdir(f"{location}/modules", exist_ok=True)
     current_dir = Path.cwd()
     mod_path = Path(location + f"modules/{MODULE_NAME}.mod")
     if mod_path.is_file():

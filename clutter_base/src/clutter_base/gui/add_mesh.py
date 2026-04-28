@@ -16,10 +16,10 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from ui_loader import load_ui
 
 from clutter_base import SUPPORTED_IMAGE_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS
 from clutter_base.db import Asset, Connection
+from clutter_base.gui.ui_loader import load_ui
 
 MODULE_DIR = Path(__file__).resolve().parent
 UI_FILE = MODULE_DIR / "AddDialog.ui"

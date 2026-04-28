@@ -1,7 +1,6 @@
 from pathlib import Path
 from typing import Dict, Optional
 
-from ImageDataModel import ImageDataModel
 from pymongo import MongoClient
 from pymongo.database import Database
 from PySide6.QtWidgets import (
@@ -11,9 +10,10 @@ from PySide6.QtWidgets import (
     QTableView,
     QWidget,
 )
-from ui_loader import load_ui
 
+from clutter_base.gui.ImageDataModel import ImageDataModel
 from clutter_base.gui.login import LoginWidget
+from clutter_base.gui.ui_loader import load_ui
 
 MODULE_DIR = Path(__file__).resolve().parent
 UI_FILE = MODULE_DIR / "GridViewWidget.ui"
