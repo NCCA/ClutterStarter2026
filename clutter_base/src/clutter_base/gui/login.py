@@ -13,20 +13,20 @@ from pymongo.database import Database
 from pymongo.errors import PyMongoError
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
+    QDialog,
     QFormLayout,
     QLabel,
     QLineEdit,
     QMessageBox,
     QPushButton,
     QVBoxLayout,
-    QWidget,
 )
 
 from clutter_base.db.connection import connect_as_user
 from clutter_base.db.users import get_user_role
 
 
-class LoginWidget(QWidget):
+class LoginWidget(QDialog):
     """Widget that collects credentials and emits login success.
 
     On successful authentication the ``authenticated`` signal is emitted with
