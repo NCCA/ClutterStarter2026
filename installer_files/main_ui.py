@@ -2,11 +2,12 @@ import maya.api.OpenMaya as OpenMaya
 import maya.api.OpenMayaUI as OpenMayaUI
 import maya.cmds as cmds
 import maya.OpenMayaUI as omui
-from clutter_base.gui import GridViewWidget, LoginWidget
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import Slot
 from shiboken6 import wrapInstance
+
+from clutter_base.gui import GridViewWidget, LoginWidget
 
 TOOL_NAME = "ClutterBaseTools"
 
@@ -51,8 +52,10 @@ class ClutterDialog(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
     @Slot()
     def show_grid_view(self):
-        grid_view_widget = GridViewWidget(self.user, self.session[0], self.session[1])
-        grid_view_widget.show()
+        self.grid_view_widget = GridViewWidget(self.user, self.session[0], self.session[1], parent=get_main_window())
+        self.grid_view_widget.show()
+        self.grid_view_widget.raise_()
+        self.grid_view_widget.activateWindow()
 
     def user_login(self):
         self.login_widget = LoginWidget(self.parent())

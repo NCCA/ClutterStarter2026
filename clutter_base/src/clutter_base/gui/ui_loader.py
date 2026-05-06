@@ -5,7 +5,7 @@ from PySide6.QtCore import QFile
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QDialog, QLayout, QMainWindow, QVBoxLayout, QWidget
 
-T = TypeVar("T", bound=QWidget)
+T = TypeVar("T", bound=QDialog)
 
 
 def load_ui(ui_file_path: Union[str, Path], parent: T) -> QWidget:

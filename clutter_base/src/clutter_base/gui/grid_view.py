@@ -47,7 +47,7 @@ class GridViewWidget(QDialog):
         self.database_view.setEditTriggers(QAbstractItemView.EditTrigger.AllEditTriggers)
         self.database_gb_layout.addWidget(self.database_view)
         # auto-size select column to content
-        self.database_view.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        # self.database_view.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         self.data_model = ImageDataModel(self._db)
         self.update_view()
         self._connect_signals()

@@ -112,10 +112,7 @@ class ImageDataModel(QAbstractTableModel):
         :param role: The role for which data is requested.
         :return: The header data.
         """
-        if (
-            role == Qt.ItemDataRole.DisplayRole
-            and orientation == Qt.Orientation.Horizontal
-        ):
+        if role == Qt.ItemDataRole.DisplayRole and orientation == Qt.Orientation.Horizontal:
             if 0 <= section < len(self._headers):
                 return self._headers[section]
         return None
