@@ -1,6 +1,5 @@
 # TODO
 
-1. ensure we can export from grid_view to file system.
 2. Begin DCC integrations maya then houdini
   1. import mesh from database
   2. export from scene to database
