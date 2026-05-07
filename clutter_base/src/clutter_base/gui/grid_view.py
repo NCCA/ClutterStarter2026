@@ -3,6 +3,7 @@ from typing import Dict, Optional
 
 from pymongo import MongoClient
 from pymongo.database import Database
+from PySide6.QtCore import QModelIndex, Qt, Slot
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QDialog,
@@ -45,12 +46,22 @@ class GridViewWidget(QDialog):
 
         self.database_view: QTableView = QTableView(self.database_gb)
         self.database_view.setEditTriggers(QAbstractItemView.EditTrigger.AllEditTriggers)
+        self.database_view.doubleClicked.connect(self.load_mesh)
         self.database_gb_layout.addWidget(self.database_view)
         # auto-size select column to content
-        # self.database_view.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         self.data_model = ImageDataModel(self._db)
         self.update_view()
         self._connect_signals()
+
+    @Slot(QModelIndex)
+    def load_mesh(self, index: QModelIndex) -> None:
+        print(f"{index} for double click")
+        row = index.row()
+        mesh_id = self.data_model.data(index, Qt.ItemDataRole.UserRole)
+        print(f"mesh_id: {mesh_id}")
+        mesh = self.asset_collection.find_one({"_id": mesh_id})
+        if mesh:
+            print(mesh)
 
     def _connect_signals(self) -> None:
         self.search_location.currentIndexChanged.connect(self.update_query)
