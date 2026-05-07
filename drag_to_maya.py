@@ -1,3 +1,4 @@
+import importlib
 import sys
 from pathlib import Path
 
@@ -15,6 +16,25 @@ BUTTON_SOURCE = "installer_files/main_ui.py"
 See if the shelf exists, if not create one. Then see if button exists or not. If exists we will just update
 button code, else create button first then add code.
 """
+
+
+def reload_package(package_name, reimport=True):
+    """
+    Purge all cached submodules for a package and optionally reimport.
+    Safe to call repeatedly during development.
+    """
+    # Collect all related module keys
+    to_unload = sorted(
+        [k for k in sys.modules if k == package_name or k.startswith(package_name + ".")],
+        key=lambda x: x.count("."),  # deepest submodules first
+        reverse=True,
+    )
+
+    for key in to_unload:
+        del sys.modules[key]
+
+    if reimport:
+        return importlib.import_module(package_name)
 
 
 def _get_main_shelves_layout():
@@ -81,3 +101,4 @@ def onMayaDroppedPythonFile(*args, **kwargs):
         raise
     print("installer dropped")
     setup_shelf()
+    reload_package("clutter_base")
