@@ -19,6 +19,7 @@ class ImageDataModel(QAbstractTableModel):
         """
         super().__init__(parent)
         self._data: list[dict[str, Any]] = []
+        self._ids: list[Any] = []
         self._headers: list[str] = []
         self._image_columns: set[int] = set()
         self._db = database
@@ -33,8 +34,11 @@ class ImageDataModel(QAbstractTableModel):
         if filter_doc is None:
             filter_doc = {}
         collection = self._db["assets"]
-        exclude = {"mesh_file_id": 0, "user_id": 0, "_id": 0}
-        self._data = list(collection.find(filter_doc, exclude))
+        exclude = {"mesh_file_id": 0, "user_id": 0}
+        results = list(collection.find(filter_doc, exclude))
+        # Separate _id from display data; store as str for easy use
+        self._ids: list[Any] = [str(doc.pop("_id")) for doc in results]
+        self._data = results
 
         if self._data:
             self._headers = list(self._data[0].keys())
@@ -146,6 +150,11 @@ class ImageDataModel(QAbstractTableModel):
                 pixmap = QPixmap()
                 if pixmap.loadFromData(value):
                     return pixmap
+            return None
+
+        if role == Qt.ItemDataRole.UserRole:
+            if 0 <= row < len(self._ids):
+                return self._ids[row]
             return None
 
         if role in (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.EditRole):

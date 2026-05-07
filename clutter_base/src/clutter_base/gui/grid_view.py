@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Dict, Optional
 
+from bson import ObjectId
 from pymongo import MongoClient
 from pymongo.database import Database
 from PySide6.QtCore import QModelIndex, Qt, Slot
@@ -12,6 +13,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from clutter_base.db.connection import Connection
 from clutter_base.gui.ImageDataModel import ImageDataModel
 from clutter_base.gui.login import LoginWidget
 from clutter_base.gui.ui_loader import load_ui
@@ -55,13 +57,14 @@ class GridViewWidget(QDialog):
 
     @Slot(QModelIndex)
     def load_mesh(self, index: QModelIndex) -> None:
-        print(f"{index} for double click")
-        row = index.row()
         mesh_id = self.data_model.data(index, Qt.ItemDataRole.UserRole)
-        print(f"mesh_id: {mesh_id}")
-        mesh = self.asset_collection.find_one({"_id": mesh_id})
-        if mesh:
-            print(mesh)
+        if not mesh_id:
+            print("load_mesh: no mesh_id for selected item")
+            return
+        print(f"load_mesh: extracting mesh {mesh_id}")
+        conn = Connection(self._db, ObjectId(), "app_user")
+        output_path = conn.extract_mesh_files(mesh_id, "/tmp/clutter_meshes")
+        print(f"load_mesh: extracted to {output_path}")
 
     def _connect_signals(self) -> None:
         self.search_location.currentIndexChanged.connect(self.update_query)
