@@ -55,16 +55,32 @@ class GridViewWidget(QDialog):
         self.update_view()
         self._connect_signals()
 
+    def _load_to_maya(self, output_path: str, file_type: str) -> None:
+        import maya.cmds as cmds
+
+        print(f"_load_to_maya: loading {output_path} ({file_type})")
+        cmds.file(output_path, i=True, type=file_type, groupReference=True, groupName="clutter_base")
+
     @Slot(QModelIndex)
     def load_mesh(self, index: QModelIndex) -> None:
+        import tempfile
+
         mesh_id = self.data_model.data(index, Qt.ItemDataRole.UserRole)
         if not mesh_id:
             print("load_mesh: no mesh_id for selected item")
             return
-        print(f"load_mesh: extracting mesh {mesh_id}")
+
+        # Get mesh name and file_type from the data model
+        row = index.row()
+        mesh_name = self.data_model.get_data_at_index(row, "name")
+        file_type = self.data_model.get_data_at_index(row, "file_type")
+
+        print(f"load_mesh: extracting mesh {mesh_id} ({mesh_name}, {file_type})")
         conn = Connection(self._db, ObjectId(), "app_user")
-        output_path = conn.extract_mesh_files(mesh_id, "/tmp/clutter_meshes")
-        print(f"load_mesh: extracted to {output_path}")
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_path = conn.extract_mesh_files(mesh_id, temp_dir)
+            print(f"load_mesh: extracted to {output_path}")
+            self._load_to_maya(f"{output_path}/{mesh_name}.{file_type}", file_type)
 
     def _connect_signals(self) -> None:
         self.search_location.currentIndexChanged.connect(self.update_query)

@@ -117,7 +117,7 @@ def install_module() -> None:
 
     mod_file_path = modules_dir / f"{MODULE_NAME}.mod"
     mod_content = textwrap.dedent(f"""\
-        +{MODULE_NAME} 1.0 {Path(__file__).parent}
+        + {MODULE_NAME} 1.0 {Path(__file__).parent}
         MAYA_PLUG_IN_PATH +:= plug-ins
         MAYA_SCRIPT_PATH +:= plug-ins/AETemplates
         XBMLANGPATH +:= icons
