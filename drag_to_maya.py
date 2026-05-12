@@ -28,6 +28,17 @@ BUTTON_SOURCE: str = "installer_files/main_ui.py"
 
 
 def reload_package(package_name: str, re_import: bool = True):
+    """
+    Purge all cached submodules for a package and optionally reimport.
+    Safe to call repeatedly during development.
+
+    Parameters
+    ----------
+    package_name:
+        Name of the package whose modules should be cleared from cache.
+    re_import:
+        Whether to re-import the package once old modules are removed.
+    """
     to_unload = sorted(
         [k for k in sys.modules if k == package_name or k.startswith(package_name + ".")],
         key=lambda x: x.count("."),
