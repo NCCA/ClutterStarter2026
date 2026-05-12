@@ -143,7 +143,13 @@ def normalize_selected_group(group_name: str) -> str | None:
     for mesh_tf in mesh_transforms:
         dupe = cmds.duplicate(mesh_tf, renameChildren=True)[0]
         cmds.parent(dupe, base_group)
-        cmds.makeIdentity(dupe, apply=True, rotate=True, translate=True, scale=True,)
+        cmds.makeIdentity(
+            dupe,
+            apply=True,
+            rotate=True,
+            translate=True,
+            scale=True,
+        )
         om.MGlobal.displayInfo(f"  Duplicated '{mesh_tf}' -> '{dupe}'")
 
     # 4. Compute the world-space bounding box.

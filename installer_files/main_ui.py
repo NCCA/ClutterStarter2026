@@ -10,6 +10,7 @@ from shiboken6 import wrapInstance
 from clutter_base.gui import GridViewWidget, LoginWidget
 
 TOOL_NAME = "ClutterBaseTools"
+WINDOW_INSTANCE = None
 
 
 def get_main_window():
@@ -24,14 +25,25 @@ def delete_workspace_control(control: str):
         cmds.deleteUI(control, control=True)
 
 
-class MayaGridView(MayaQWidgetDockableMixin, GridViewWidget):
+class _GridViewShim(GridViewWidget):
+    """Prevents GridViewWidget.__init__ being called a second time
+    by MayaQWidgetDockableMixin's cooperative super() chain."""
+
+    def __init__(self, *args, **kwargs):
+        if not getattr(self, "_grid_initialised", False):
+            super().__init__(*args, **kwargs)
+
+
+class MayaGridView(MayaQWidgetDockableMixin, _GridViewShim):
     def __init__(self, user: str, client, db, parent=get_main_window()):
+        # GridViewWidget FIRST — the underlying QWidget C++ object must exist
+        # before the mixin calls setAttribute / setObjectName etc.
+        GridViewWidget.__init__(self, user, client, db, parent)
+        self._grid_initialised = True  # arm the shim guard
+        MayaQWidgetDockableMixin.__init__(self, parent=parent)
 
-        super().__init__(user, client, db, parent)
-        # GridViewWidget.__init__(self, user, client, db, parent)
 
-
-class ClutterDialog(MayaQWidgetDockableMixin, QtWidgets.QDialog):
+class ClutterDialog(QtWidgets.QDialog):
     def __init__(self, parent=get_main_window()):
         delete_workspace_control(TOOL_NAME + "WorkspaceControl")
         super().__init__(parent)
@@ -46,6 +58,7 @@ class ClutterDialog(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.show_grid.clicked.connect(self.show_grid_view)
         self.grid_layout.addWidget(self.show_grid)
         self.grid_view_widget = None
+        self.setObjectName(TOOL_NAME)
 
     @Slot(str, str)
     def auth_user(self, role, user):
@@ -60,16 +73,23 @@ class ClutterDialog(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
     @Slot(int)
     def _update_grid_visible(self, value):
+        delete_workspace_control("MayaGridViewWorkspaceControl")
+        self.grid_view_widget = None
+
+    def dockCloseEventTriggered(self):
+        delete_workspace_control("MayaGridViewWorkspaceControl")
         self.grid_view_widget = None
 
     @Slot()
     def show_grid_view(self):
         if not self.grid_view_widget:
             self.grid_view_widget = MayaGridView(self.user, self.session[0], self.session[1], parent=get_main_window())
-            self.grid_view_widget.show()
+            # Override the UUID name with a fixed one before show()
+            self.grid_view_widget.setObjectName("MayaGridView")
+            self.grid_view_widget.show(dockable=True)
             self.grid_view_widget.raise_()
             self.grid_view_widget.activateWindow()
-            self.grid_view_widget.finished.connect(self._update_grid_visible)
+            # self.grid_view_widget.finished.connect(self._update_grid_visible)
 
     def user_login(self):
         self.login_widget = LoginWidget(self.parent())
@@ -77,5 +97,19 @@ class ClutterDialog(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.login_widget.show()
 
 
-clutter_dialog = ClutterDialog()
-clutter_dialog.show(dockable=True)
+def show_tool():
+    global WINDOW_INSTANCE
+
+    try:
+        WINDOW_INSTANCE.close()
+        WINDOW_INSTANCE.deleteLater()
+
+    except Exception:
+        pass
+    WINDOW_INSTANCE = ClutterDialog()
+    WINDOW_INSTANCE.show()
+
+
+show_tool()
+# clutter_dialog = ClutterDialog()
+# clutter_dialog.show(dockable=True)
