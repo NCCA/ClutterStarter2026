@@ -8,7 +8,7 @@ __author__ = "Jon Macey jmacey@bournemouth.ac.uk"
 __license__ = "MIT"
 
 
-SUPPORTED_MESH_EXTENSIONS = [".obj", ".usd", ".usda", "usdc", "usdz", "fbx"]
+SUPPORTED_MESH_EXTENSIONS = [".obj", ".usd", ".usda", ".usdc", ".usdz", ".fbx"]
 SUPPORTED_IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".bmp", ".tif"]
 
 

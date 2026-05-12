@@ -23,6 +23,13 @@ def delete_workspace_control(control: str):
         cmds.deleteUI(control, control=True)
 
 
+class MayaGridView(MayaQWidgetDockableMixin, GridViewWidget):
+    def __init__(self, user: str, client, db, parent=get_main_window()):
+
+        super().__init__(user, client, db, parent)
+        # GridViewWidget.__init__(self, user, client, db, parent)
+
+
 class ClutterDialog(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     def __init__(self, parent=get_main_window()):
         delete_workspace_control(TOOL_NAME + "WorkspaceControl")
@@ -37,6 +44,7 @@ class ClutterDialog(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.show_grid.setEnabled(False)
         self.show_grid.clicked.connect(self.show_grid_view)
         self.grid_layout.addWidget(self.show_grid)
+        self.grid_view_widget = None
 
     @Slot(str, str)
     def auth_user(self, role, user):
@@ -49,10 +57,18 @@ class ClutterDialog(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.login_widget.close()
         self.show_grid.setEnabled(True)
 
+    @Slot(int)
+    def _update_grid_visible(self, value):
+        self.grid_view_widget = None
+
     @Slot()
     def show_grid_view(self):
-        grid_view_widget = GridViewWidget(self.user, self.session[0], self.session[1])
-        grid_view_widget.show()
+        if not self.grid_view_widget:
+            self.grid_view_widget = MayaGridView(self.user, self.session[0], self.session[1], parent=get_main_window())
+            self.grid_view_widget.show()
+            self.grid_view_widget.raise_()
+            self.grid_view_widget.activateWindow()
+            self.grid_view_widget.finished.connect(self._update_grid_visible)
 
     def user_login(self):
         self.login_widget = LoginWidget(self.parent())

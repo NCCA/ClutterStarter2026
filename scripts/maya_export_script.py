@@ -122,9 +122,7 @@ def normalize_selected_group(group_name: str) -> str | None:
     root_name = selection[0]
 
     if not cmds.objectType(root_name, isType="transform"):
-        om.MGlobal.displayError(
-            f"Selected object is not a transform/group: {root_name}"
-        )
+        om.MGlobal.displayError(f"Selected object is not a transform/group: {root_name}")
         return None
 
     # 1. Collect mesh transforms.
@@ -136,9 +134,7 @@ def normalize_selected_group(group_name: str) -> str | None:
         om.MGlobal.displayError("No meshes found inside the selected group.")
         return None
 
-    om.MGlobal.displayInfo(
-        f"Found {len(mesh_transforms)} mesh transform(s) in '{root_name}'."
-    )
+    om.MGlobal.displayInfo(f"Found {len(mesh_transforms)} mesh transform(s) in '{root_name}'.")
 
     # 2. Create a new base group.
     base_group = cmds.group(empty=True, name=group_name, world=True)
@@ -147,7 +143,7 @@ def normalize_selected_group(group_name: str) -> str | None:
     for mesh_tf in mesh_transforms:
         dupe = cmds.duplicate(mesh_tf, renameChildren=True)[0]
         cmds.parent(dupe, base_group)
-        cmds.makeIdentity(dupe, apply=True, rotate=True, translate=False, scale=False)
+        cmds.makeIdentity(dupe, apply=True, rotate=True, translate=True, scale=True,)
         om.MGlobal.displayInfo(f"  Duplicated '{mesh_tf}' -> '{dupe}'")
 
     # 4. Compute the world-space bounding box.
@@ -158,9 +154,7 @@ def normalize_selected_group(group_name: str) -> str | None:
     max_size = max(x_max - x_min, y_max - y_min, z_max - z_min)
 
     if max_size < 1e-6:
-        om.MGlobal.displayError(
-            "Bounding box is (near) zero in size — cannot scale to unit size."
-        )
+        om.MGlobal.displayError("Bounding box is (near) zero in size — cannot scale to unit size.")
         cmds.delete(base_group)
         return None
 
@@ -168,17 +162,15 @@ def normalize_selected_group(group_name: str) -> str | None:
     sel = om.MSelectionList()
     sel.add(base_group)
     fn_transform = om.MFnTransform(sel.getDagPath(0))
-    fn_transform.setTranslation(
-        om.MVector(-center_x, -center_y, -center_z), om.MSpace.kWorld
-    )
+    fn_transform.setTranslation(om.MVector(-center_x, -center_y, -center_z), om.MSpace.kWorld)
     uniform_scale = 1.0 / max_size
     fn_transform.setScale([uniform_scale, uniform_scale, uniform_scale])
 
-    om.MGlobal.displayInfo(
-        f"'{base_group}' moved to origin and scaled by {uniform_scale:.6f}."
-    )
+    om.MGlobal.displayInfo(f"'{base_group}' moved to origin and scaled by {uniform_scale:.6f}.")
 
     cmds.select(base_group, replace=True)
+    cmds.makeIdentity(base_group, apply=True, rotate=True, translate=True, scale=True)
+
     return base_group
 
 
@@ -260,5 +252,5 @@ def export_all_selected(export_root: str) -> None:
     om.MGlobal.displayInfo("Export complete.")
 
 
-export_root = "/home/jmacey/Desktop/25-26/ClutterStarter/ExportedMeshes"
+export_root = "/home/jmacey/tmp/ExportedMeshes"
 export_all_selected(export_root)
