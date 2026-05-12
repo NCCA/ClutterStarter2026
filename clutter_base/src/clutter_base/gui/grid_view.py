@@ -1,8 +1,11 @@
+import tempfile
 from pathlib import Path
 from typing import Dict, Optional
 
+from bson import ObjectId
 from pymongo import MongoClient
 from pymongo.database import Database
+from PySide6.QtCore import QModelIndex, Qt, Slot
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QDialog,
@@ -11,6 +14,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from clutter_base.db import Connection
 from clutter_base.gui.ImageDataModel import ImageDataModel
 from clutter_base.gui.login import LoginWidget
 from clutter_base.gui.ui_loader import load_ui
@@ -57,6 +61,27 @@ class GridViewWidget(QDialog):
         self.search_text.textChanged.connect(self.update_query)
         self.case_sensitive.stateChanged.connect(self.update_query)
         self.mesh_type.currentIndexChanged.connect(self.update_query)
+        self.database_view.doubleClicked.connect(self.import_mesh)
+
+    def _import_mesh_to_maya(self, file_path: str, file_type: str):
+        import maya.cmds as cmds
+
+        if file_type == "obj":
+            cmds.file(file_path, i=True, type=file_type, groupReference=True, groupName="clutter_base")
+        elif file_type == "fbx":
+            cmds.file(file_path, i=True, type="FBX", groupReference=True, groupName="clutter_base")
+
+    @Slot(QModelIndex)
+    def import_mesh(self, index: QModelIndex):
+        mesh_id = self.data_model.data(index, Qt.ItemDataRole.UserRole)
+        row = index.row()
+        mesh_name = self.data_model.get_data_at_index(row, "name")
+        file_type = self.data_model.get_data_at_index(row, "file_type")
+        print(f"{mesh_name} {file_type} {mesh_id}")
+        conn = Connection(self._db, ObjectId(), "app_user")
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_path = conn.extract_mesh_files(mesh_id, temp_dir)
+            self._import_mesh_to_maya(f"{output_path}/{mesh_name}.{file_type}", file_type)
 
     def accept(self) -> None:
         super().accept()
